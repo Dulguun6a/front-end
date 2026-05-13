@@ -1,4 +1,5 @@
 "use client";
+
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import DataJson from "../../utils/data.json";
@@ -6,121 +7,188 @@ import DataJson from "../../utils/data.json";
 export default function List() {
   const [query, setQuery] = useState("");
   const [displayed, setDisplayed] = useState(DataJson);
-  const inputRef = useRef(null);
-  const debounceRef = useRef(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const debounceRef = useRef<any>(null);
 
   useEffect(() => {
-    clearTimeout(debounceRef.current);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
     debounceRef.current = setTimeout(() => {
       const q = query.trim().toLowerCase();
-      if (!q) { setDisplayed(DataJson); return; }
+
+      if (!q) {
+        setDisplayed(DataJson);
+        return;
+      }
+
       setDisplayed(
         DataJson.filter((item) =>
-          [item.first_name, item.last_name, `${item.first_name} ${item.last_name}`,
-           item.email, item.country, item.type, item.phone, item.company, item.job_title, item.address]
-            .filter(Boolean).map((f) => String(f).toLowerCase()).some((f) => f.includes(q))
+          [
+            item.first_name,
+            item.last_name,
+            `${item.first_name} ${item.last_name}`,
+            item.email,
+            item.country,
+            item.type,
+            item.phone,
+            item.company,
+            item.job_title,
+            item.address,
+          ]
+            .filter(Boolean)
+            .map((f) => String(f).toLowerCase())
+            .some((f) => f.includes(q))
         )
       );
     }, 180);
-    return () => clearTimeout(debounceRef.current);
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
   }, [query]);
 
   return (
-    <main className="flex flex-col min-h-screen bg-white text-gray-800" style={{ fontFamily: 'Arial, sans-serif' }}>
+    <main className="relative min-h-screen bg-gradient-to-br from-red-50 via-white to-blue-50 text-gray-800 overflow-x-hidden">
+      
+      {/* Background blobs (responsive scaling) */}
+      <div className="absolute -top-20 -left-20 sm:-top-32 sm:-left-32 h-48 w-48 sm:h-72 sm:w-72 rounded-full bg-red-200/40 blur-3xl" />
+      <div className="absolute bottom-0 right-0 h-48 w-48 sm:h-72 sm:w-72 rounded-full bg-blue-200/40 blur-3xl" />
 
       {/* Back button */}
-      <div className="absolute top-6 left-6 z-10">
+      <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-20">
         <Link
           href="/"
-          className="flex items-center gap-2 px-4 py-2 rounded-full bg-red-600 border-2 border-red-700 text-sm text-white hover:bg-red-700 hover:border-red-800 transition-all duration-200 font-semibold"
+          className="flex items-center gap-2 rounded-full border border-red-300 bg-white/80 px-3 py-1.5 sm:px-5 sm:py-2.5 text-xs sm:text-sm font-semibold text-red-600 shadow-md backdrop-blur-md transition hover:scale-105 hover:bg-red-600 hover:text-white"
         >
-          ← back
+          ← Back
         </Link>
       </div>
 
-      <section className="flex flex-1 flex-col items-center pt-20 pb-12 px-6">
+      {/* Container */}
+      <section className="relative z-10 mx-auto flex min-h-screen max-w-7xl flex-col items-center px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 pb-16">
 
-        {/* Search bar */}
-        <div className="w-full max-w-2xl mb-6">
+        {/* Search */}
+        <div className="mb-6 w-full max-w-xl sm:max-w-2xl">
           <div className="relative">
-            <span className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">🔍</span>
+            <span className="pointer-events-none absolute left-4 sm:left-6 top-1/2 -translate-y-1/2 text-gray-400">
+              🔍
+            </span>
+
             <input
               ref={inputRef}
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search..."
-              className="w-full pl-12 pr-12 py-5 bg-white border-2 border-red-200 rounded-full text-base text-gray-800 placeholder-gray-400 focus:outline-none focus:border-red-400 transition-all duration-200 shadow-md"
+              placeholder="Search users..."
+              className="w-full rounded-full border-2 border-red-200 bg-white py-3 sm:py-4 pl-11 sm:pl-12 pr-10 sm:pr-12 text-sm sm:text-base shadow-md transition focus:border-red-400 focus:outline-none"
             />
+
             {query && (
               <button
-                onClick={() => { setQuery(""); inputRef.current?.focus(); }}
-                className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 transition text-base leading-none"
+                onClick={() => {
+                  setQuery("");
+                  inputRef.current?.focus();
+                }}
+                className="absolute right-4 sm:right-6 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700"
               >
                 ✕
               </button>
             )}
           </div>
-          <p className="text-xs text-red-600 font-semibold text-right mt-2 pr-2">
+
+          <p className="mt-2 text-right text-xs font-semibold text-red-600">
             {displayed.length} user{displayed.length !== 1 ? "s" : ""}
           </p>
         </div>
 
-        {/* 5-column grid */}
+        {/* Grid */}
         {displayed.length === 0 ? (
-          <p className="text-center text-gray-400 py-16 text-sm">
-            No users found for &ldquo;{query}&rdquo;
-          </p>
+          <div className="py-16 text-center text-sm text-gray-400">
+            No users found for “{query}”
+          </div>
         ) : (
-          <div className="w-full grid grid-cols-5 gap-4">
+          <div
+            className="
+              grid w-full gap-4 sm:gap-5
+              grid-cols-1
+              sm:grid-cols-2
+              lg:grid-cols-3
+              xl:grid-cols-4
+              2xl:grid-cols-5
+            "
+          >
             {displayed.map((item) => (
               <div
                 key={item.id}
-                className="flex flex-col bg-white border-2 border-red-200 rounded-3xl overflow-hidden hover:border-red-400 hover:shadow-lg transition-all duration-200 shadow-md"
+                className="flex flex-col overflow-hidden rounded-2xl border-2 border-red-200 bg-white shadow-md transition hover:-translate-y-1 hover:border-red-400 hover:shadow-xl"
               >
-                <div className="w-full h-32 bg-red-50 flex items-center justify-center overflow-hidden border-b-2 border-red-100">
+                {/* Image */}
+                <div className="flex h-28 sm:h-32 items-center justify-center bg-red-50 overflow-hidden">
                   {item.img ? (
                     <img
                       src={item.img}
                       alt={`${item.first_name} ${item.last_name}`}
-                      className="w-full h-full object-cover"
+                      className="h-full w-full object-cover"
                     />
                   ) : (
-                    <div className="w-14 h-14 rounded-full bg-red-100 border-2 border-red-200 flex items-center justify-center text-red-600 font-bold text-xl">
-                      {item.first_name?.[0]}{item.last_name?.[0]}
+                    <div className="flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-full border-2 border-red-200 bg-red-100 text-base sm:text-xl font-bold text-red-600">
+                      {item.first_name?.[0]}
+                      {item.last_name?.[0]}
                     </div>
                   )}
                 </div>
 
-                <div className="flex flex-col gap-1.5 p-4 flex-1">
-                  <div className="flex items-start justify-between gap-1">
-                    <p className="text-sm font-bold text-gray-900 leading-tight truncate">
+                {/* Content */}
+                <div className="flex flex-1 flex-col gap-1.5 p-3 sm:p-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="truncate text-sm font-bold">
                       {item.first_name} {item.last_name}
                     </p>
-                    <span className="text-[10px] px-2 py-0.5 bg-red-50 border border-red-200 rounded-full text-red-500 font-semibold uppercase tracking-wide whitespace-nowrap flex-shrink-0">
+
+                    <span className="shrink-0 rounded-full border border-red-200 bg-red-50 px-2 py-0.5 text-[10px] font-semibold uppercase text-red-500">
                       {item.type}
                     </span>
                   </div>
-                  <p className="text-xs text-gray-500 truncate">{item.email}</p>
-                  <p className="text-xs text-red-600 font-semibold">{item.country}</p>
-                  {item.phone     && <p className="text-xs text-gray-500 truncate">📞 {item.phone}</p>}
-                  {item.company   && <p className="text-xs text-gray-500 truncate">🏢 {item.company}</p>}
-                  {item.job_title && <p className="text-xs text-gray-500 truncate">💼 {item.job_title}</p>}
-                  {item.address   && <p className="text-xs text-gray-400 truncate">📍 {item.address}</p>}
+
+                  <p className="truncate text-xs text-gray-500">{item.email}</p>
+                  <p className="text-xs font-semibold text-red-600">
+                    {item.country}
+                  </p>
+
+                  {item.phone && (
+                    <p className="truncate text-xs text-gray-500">📞 {item.phone}</p>
+                  )}
+                  {item.company && (
+                    <p className="truncate text-xs text-gray-500">🏢 {item.company}</p>
+                  )}
+                  {item.job_title && (
+                    <p className="truncate text-xs text-gray-500">💼 {item.job_title}</p>
+                  )}
+                  {item.address && (
+                    <p className="truncate text-xs text-gray-400">📍 {item.address}</p>
+                  )}
                 </div>
 
+                {/* Footer */}
                 {(item.age || item.point !== undefined) && (
-                  <div className="border-t-2 border-red-100 px-4 py-3 grid grid-cols-2 gap-2 text-center bg-red-50">
+                  <div className="grid grid-cols-2 gap-2 border-t bg-red-50 px-3 py-3 text-center sm:px-4">
                     {item.age && (
                       <div>
-                        <p className="text-[10px] text-red-400 uppercase tracking-wider font-semibold">Age</p>
-                        <p className="text-sm font-bold text-gray-800">{item.age}</p>
+                        <p className="text-[10px] font-semibold uppercase text-red-400">
+                          Age
+                        </p>
+                        <p className="text-sm font-bold">{item.age}</p>
                       </div>
                     )}
+
                     {item.point !== undefined && (
                       <div>
-                        <p className="text-[10px] text-red-400 uppercase tracking-wider font-semibold">Points</p>
-                        <p className="text-sm font-bold text-red-600">{item.point}</p>
+                        <p className="text-[10px] font-semibold uppercase text-red-400">
+                          Points
+                        </p>
+                        <p className="text-sm font-bold text-red-600">
+                          {item.point}
+                        </p>
                       </div>
                     )}
                   </div>
